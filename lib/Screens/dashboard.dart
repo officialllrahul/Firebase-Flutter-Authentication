@@ -55,6 +55,9 @@ class _DashboardState extends State<Dashboard> {
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        unselectedItemColor: Colors.black87,
+        selectedItemColor: Colors.orange,
+        showUnselectedLabels: true,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
