@@ -127,8 +127,7 @@ class _UpdateFirestoreDataState extends State<UpdateFirestoreData> {
                           String downloadURL =
                               await taskSnapshot.ref.getDownloadURL();
 
-                          final String name =
-                              userUpdatePasswordController.text;
+                          final String name = userUpdatePasswordController.text;
                           final String email =
                               userUpdateEmailStoreController.text;
                           final String contact =
@@ -142,7 +141,6 @@ class _UpdateFirestoreDataState extends State<UpdateFirestoreData> {
                           userUpdatePasswordController.text = '';
                           userUpdateEmailStoreController.text = '';
                           userUpdateContactStoreController.text = '';
-
                           Navigator.of(context).pop();
                         } else {
                           print('No image selected');

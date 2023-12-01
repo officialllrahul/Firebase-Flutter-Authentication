@@ -5,6 +5,7 @@ import 'package:firebseauthentication/Screens/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
 
 class MultiImageVideo extends StatefulWidget {
   const MultiImageVideo({Key? key}) : super(key: key);
@@ -14,15 +15,20 @@ class MultiImageVideo extends StatefulWidget {
 }
 
 class _MultiImageVideoState extends State<MultiImageVideo> {
-
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final ImagePicker _picker = ImagePicker();
-  final CollectionReference _items = FirebaseFirestore.instance.collection('MultiImageVideo');
+  final CollectionReference _items =
+      FirebaseFirestore.instance.collection('MultiImageVideo');
 
   List<File> _images = [];
+  XFile? _video;
+  bool isPlaying = false;
+  bool isMuted = false;
+  late VideoPlayerController _videoController;
+  late Future<void> _initializeVideoPlayerFuture;
 
   Future<void> getImageGallery() async {
-    List<XFile>? pickedFiles = await _picker.pickMultiImage( );
+    List<XFile>? pickedFiles = await _picker.pickMultiImage();
 
     if (pickedFiles != null) {
       setState(() {
@@ -31,32 +37,68 @@ class _MultiImageVideoState extends State<MultiImageVideo> {
     }
   }
 
-  Future<void> _uploadImages() async {
+  Future<void> getVideoGallery() async {
+    XFile? pickedVideo = await _picker.pickVideo(source: ImageSource.gallery);
+
+    if (pickedVideo != null) {
+      setState(() {
+        _video = pickedVideo;
+        _videoController = VideoPlayerController.file(File(_video!.path))
+          ..addListener(() {
+            if (!mounted) return;
+            setState(() {});
+          });
+        _initializeVideoPlayerFuture = _videoController.initialize();
+        _videoController.setLooping(true); // Optional: Enable looping
+      });
+    }
+  }
+
+  Future<void> _uploadImagesAndVideo() async {
+    // Upload images
     for (File image in _images) {
-      String imageName = DateTime.now().millisecondsSinceEpoch.toString(); // Unique name for each image
+      String imageName = DateTime.now().millisecondsSinceEpoch.toString();
       Reference ref = _storage.ref().child('multi_image_video/$imageName.jpg');
       UploadTask uploadTask = ref.putFile(image);
-
       TaskSnapshot taskSnapshot = await uploadTask.whenComplete(() => null);
-
       String downloadURL = await taskSnapshot.ref.getDownloadURL();
-
-      // Now you can save the downloadURL to Firebase Firestore or perform any other necessary action
+      // Save the downloadURL to Firebase Firestore or perform any other necessary action
       await _items.add({'imageURL': downloadURL});
-
     }
+    // Upload video
+    if (_video != null) {
+      String videoName = DateTime.now().millisecondsSinceEpoch.toString();
+      Reference videoRef =
+          _storage.ref().child('multi_image_video/$videoName.mp4');
+      UploadTask videoUploadTask = videoRef.putFile(File(_video!.path));
+      TaskSnapshot videoTaskSnapshot =
+          await videoUploadTask.whenComplete(() => null);
+      String videoDownloadURL = await videoTaskSnapshot.ref.getDownloadURL();
+      // Save the videoDownloadURL to Firebase Firestore or perform any other necessary action
+      await _items.add({'videoURL': videoDownloadURL});
+    }
+
     // Show a toast message
     Fluttertoast.showToast(
         msg: "Data successfully registered in Firebase",
         backgroundColor: Colors.blueGrey,
         timeInSecForIosWeb: 7);
-    
-    Navigator.push(context, MaterialPageRoute(builder: (context) => Dashboard()));
 
-    // Clear the images list after uploading
+    // Navigate to the dashboard screen
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => Dashboard()));
+
+    // Clear the images and video variables after uploading
     setState(() {
       _images.clear();
+      _video = null;
     });
+  }
+
+  @override
+  void dispose() {
+    _videoController.dispose();
+    super.dispose();
   }
 
   @override
@@ -87,11 +129,76 @@ class _MultiImageVideoState extends State<MultiImageVideo> {
               ),
             ),
           ),
+          Center(
+            child: InkWell(
+              onTap: () {
+                getVideoGallery();
+              },
+              child: Container(
+                margin: EdgeInsets.all(20),
+                height: 200,
+                width: 200,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                  ),
+                ),
+                child: _video != null
+                    ? AspectRatio(
+                        aspectRatio: _videoController.value.aspectRatio,
+                        child: VideoPlayer(_videoController),
+                      )
+                    : const Center(child: Icon(Icons.video_library)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                onPressed: () {
+                  setState(() {
+                    if (isPlaying) {
+                      _videoController.pause();
+                    } else {
+                      _videoController.play();
+                    }
+                    isPlaying = !isPlaying;
+                  });
+                },
+              ),
+              const SizedBox(width: 16),
+              IconButton(
+                icon: Icon(Icons.stop),
+                onPressed: () {
+                  setState(() {
+                    _videoController.pause();
+                    _videoController.seekTo(Duration.zero);
+                    isPlaying = false;
+                  });
+                },
+              ),
+              const SizedBox(width: 16),
+              IconButton(
+                icon: Icon(isMuted ? Icons.volume_off : Icons.volume_up),
+                onPressed: () {
+                  setState(() {
+                    isMuted = !isMuted;
+                    _videoController.setVolume(isMuted ? 0.0 : 1.0);
+                  });
+                },
+              ),
+            ],
+          ),
           Container(
             width: double.infinity,
-            margin: EdgeInsets.all(20),
+            margin: const EdgeInsets.all(20),
             child: ElevatedButton(
-              onPressed: _images.isNotEmpty ? _uploadImages : null,
+              onPressed: (_images.isNotEmpty || _video != null)
+                  ? _uploadImagesAndVideo
+                  : null,
               child: Text("Upload"),
             ),
           )
