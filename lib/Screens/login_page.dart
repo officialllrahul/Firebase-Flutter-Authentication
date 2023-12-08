@@ -10,7 +10,7 @@ import 'package:sign_in_button/sign_in_button.dart';
 
 
 class EmailLogin extends StatefulWidget {
-  EmailLogin({Key? key}) : super(key: key);
+  const EmailLogin({Key? key}) : super(key: key);
 
   @override
   State<EmailLogin> createState() => _EmailLoginState();
@@ -21,7 +21,7 @@ class _EmailLoginState extends State<EmailLogin> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  //Google Signin
+  //Google SignIn
   Future<UserCredential?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -41,7 +41,7 @@ class _EmailLoginState extends State<EmailLogin> {
         MaterialPageRoute(builder: (context) => const Dashboard()),
       );
       Fluttertoast.showToast(
-          msg: "Google signin successfully",
+          msg: "Google SignIn successfully",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           timeInSecForIosWeb: 2,

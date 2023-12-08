@@ -24,13 +24,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      home: const SplashScreen(),
       routes: {
         'emailLogin':(context)=>EmailLogin(),
-        'emailSignup':(context)=>EmailSignUp(),
-        'phoneAuth':(context)=>PhoneAuth(),
-        'dashboard':(context)=>Dashboard(),
-        'resetPassword':(context)=>ResetPassword(),
+        'emailSignup':(context)=>const EmailSignUp(),
+        'phoneAuth':(context)=> const PhoneAuth(),
+        'dashboard':(context)=>const Dashboard(),
+        'resetPassword':(context)=>const ResetPassword(),
       },
     );
   }

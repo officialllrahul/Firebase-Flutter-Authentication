@@ -12,10 +12,11 @@ class EmailSignUp extends StatefulWidget {
   const EmailSignUp({super.key});
 
   @override
-  State<EmailSignUp> createState() => _EmailSignUpState();
+  State<EmailSignUp> createState() => EmailSignUpState();
 }
 
-class _EmailSignUpState extends State<EmailSignUp> {
+class EmailSignUpState extends State<EmailSignUp> {
+
   FirebaseAuth auth = FirebaseAuth.instance;
   final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
@@ -26,7 +27,6 @@ class _EmailSignUpState extends State<EmailSignUp> {
 
   final CollectionReference _items =
       FirebaseFirestore.instance.collection('UsersData');
-
   var taskSnapshot;
 
   File? _image;
@@ -91,6 +91,7 @@ class _EmailSignUpState extends State<EmailSignUp> {
       print('Error uploading image: $e');
     }
   }
+  bool _obscureText = true;
 
   @override
   Widget build(BuildContext context) {
@@ -169,35 +170,37 @@ class _EmailSignUpState extends State<EmailSignUp> {
                   margin: const EdgeInsets.symmetric(vertical: 10),
                   child: TextFormField(
                     autofocus: false,
-                    obscureText: true,
+                    obscureText: _obscureText,
                     maxLength: 8,
-                    decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.password),
-                        suffixIcon: Icon(Icons.visibility),
+                    decoration: InputDecoration(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureText ? Icons.visibility : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureText = !_obscureText;
+                            });
+                          },
+                        ),
                         labelText: "Password",
-                        labelStyle: TextStyle(fontSize: 20),
-                        border: OutlineInputBorder(),
+                        labelStyle: const TextStyle(fontSize: 20),
+                        border: const OutlineInputBorder(),
                         errorStyle:
-                            TextStyle(color: Colors.redAccent, fontSize: 15)),
+                            const TextStyle(color: Colors.redAccent, fontSize: 15)),
                     controller: passwordController,
                     validator: (value) {
-                      RegExp regexSmall = RegExp(r'^(?=.*?[a-z])');
-                      RegExp regexCapital = RegExp(r'^(?=.*?[A-Z])');
-                      RegExp regexNumber = RegExp(r'^(?=.*?[0-9])');
-                      RegExp regexSpecial =
-                          RegExp(r'^(?=.*?[!@#$%^&*(),.?":{}|<>])');
-                      RegExp regexDigit = RegExp(r'^.{8}$');
                       if (value == null || value.isEmpty) {
                         return "Please enter your password";
-                      } else if (!regexSmall.hasMatch(value)) {
+                      } else if (!RegExp(r'^(?=.*?[a-z])').hasMatch(value)) {
                         return 'Text must contain at least one lowercase letter !';
-                      } else if (!regexCapital.hasMatch(value)) {
+                      } else if (!RegExp(r'^(?=.*?[A-Z])').hasMatch(value)) {
                         return 'Text must contain at least one capital letter !';
-                      } else if (!regexNumber.hasMatch(value)) {
+                      } else if (!RegExp(r'^(?=.*?[0-9])').hasMatch(value)) {
                         return 'Text must contain at least one number!';
-                      } else if (!regexSpecial.hasMatch(value)) {
+                      } else if (!RegExp(r'^(?=.*?[!@#$%^&*(),.?":{}|<>])').hasMatch(value)) {
                         return 'Text must contain at least one special character!';
-                      } else if (!regexDigit.hasMatch(value)) {
+                      } else if (!RegExp(r'^.{8}$').hasMatch(value)) {
                         return 'password must contain 8 digits!';
                       }
                       return null;

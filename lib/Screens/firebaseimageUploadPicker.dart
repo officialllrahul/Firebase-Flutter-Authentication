@@ -119,7 +119,7 @@ class _ImagePickerUploadState extends State<ImagePickerUpload> {
                 margin: EdgeInsets.all(15),
                 child: TextField(
                     controller: userUpdatePasswordController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: "Password",
                     ))),
             Container(
